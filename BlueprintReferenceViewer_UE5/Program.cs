@@ -23,8 +23,17 @@
                 bIgnoreEditorOnlyVisualization = true,
             };
             
+            try
+            {
             ReferenceViewer Viewer = new(Settings);
             Viewer.Execute();
+        }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"Error occured: {ex.Message}. Application exited.");
+                Console.ForegroundColor = ConsoleColor.Gray;
+            }
         }
     }
 }
