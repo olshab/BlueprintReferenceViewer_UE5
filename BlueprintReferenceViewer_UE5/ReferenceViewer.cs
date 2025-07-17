@@ -29,8 +29,10 @@ namespace BlueprintReferenceViewer_UE5
         {
             _viewerSettings = Settings;
 
-            string OodleBinaryFilepath = GetOodleDll();
+            string OodleBinaryFilepath = GetDll("oo2core_9_win64.dll");
             OodleHelper.Initialize(OodleBinaryFilepath);
+            string ZlibBinaryFilepath = GetDll("zlib-ng2.dll");
+            ZlibHelper.Initialize(ZlibBinaryFilepath);
 
             _provider = InitializeProvider();
 
@@ -185,17 +187,22 @@ namespace BlueprintReferenceViewer_UE5
                 _currentBlueprint = new(BlueprintGeneratedClass);
                 ListReferencedBlueprints(NestingLevel + 1);
             }
+
+            if (NestingLevel == 0)
+            {
+                Console.WriteLine();
+            }
         }
 
-        private static string GetOodleDll()
+        private static string GetDll(string DllFilename)
         {
-            string TempDllPath = Path.Combine(Path.GetTempPath(), "oo2core_9_win64.dll");
+            string TempDllPath = Path.Combine(Path.GetTempPath(), DllFilename);
             if (!File.Exists(TempDllPath))
             {
-                using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("BlueprintReferenceViewer_UE5.Resources.oo2core_9_win64.dll");
+                using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"BlueprintDumper_UE5.Resources.{DllFilename}");
                 if (stream == null)
                 {
-                    throw new Exception("Couldn't find oo2core_9_win64.dll in Embedded Resources");
+                    throw new Exception($"Couldn't find {DllFilename} in Embedded Resources");
                 }
                 var ba = new byte[(int)stream.Length];
                 _ = stream.Read(ba, 0, (int)stream.Length);
