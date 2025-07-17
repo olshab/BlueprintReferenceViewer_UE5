@@ -71,7 +71,7 @@ namespace BlueprintReferenceViewer_UE5
                 if (!PackageFound || Package is null)
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"Failed to load package {BlueprintPackagePath} in game files.");
+                    Console.WriteLine($"Failed to load package {BlueprintPackagePath}");
                     Console.ForegroundColor = ConsoleColor.Gray;
                     continue;
                 }
@@ -173,11 +173,20 @@ namespace BlueprintReferenceViewer_UE5
 
             foreach (string BlueprintPackagePath in BlueprintPackages)
             {
+                if (BlueprintPackagePath == "None")
+                {
+                    continue;
+                }
+
                 bool PackageFound = _provider.TryLoadPackage(BlueprintPackagePath, out IPackage? Package);
                 if (!PackageFound || Package is null)
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"Failed to load package {BlueprintPackagePath} in game files.");
+                    for (int i = 0; i < NestingLevel + 1; i++)
+                    {
+                        Console.Write('\t');
+                    }
+                    Console.WriteLine($"Failed to load package {BlueprintPackagePath}");
                     Console.ForegroundColor = ConsoleColor.Gray;
                     continue;
                 }
@@ -221,11 +230,11 @@ namespace BlueprintReferenceViewer_UE5
 
             var VersionContainer = new VersionContainer(CUE4Parse_GameVersion);
             var Provider = new DefaultFileProvider(_viewerSettings.PaksDirectory, SearchOption.TopDirectoryOnly,
-                VersionContainer, StringComparer.Ordinal);
+                VersionContainer, StringComparer.OrdinalIgnoreCase);
             Provider.MappingsContainer = new FileUsmapTypeMappingsProvider(_viewerSettings.MappingsFilepath);
             Provider.Initialize();
             Provider.SubmitKey(new FGuid(), new FAesKey(_viewerSettings.AESKey));
-            Provider.PostMount();
+            Provider.LoadVirtualPaths();
 
             return Provider;
         }

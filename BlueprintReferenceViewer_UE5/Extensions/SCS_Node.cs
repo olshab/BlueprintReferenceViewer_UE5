@@ -23,20 +23,22 @@ namespace BlueprintReferenceViewer_UE5.Extensions
 
             // Component Class
             var ComponentClassProperty = _object.Properties
-                .First(x => x.Name.Text == "ComponentClass").Tag as ObjectProperty;
+                .FirstOrDefault(x => x.Name.Text == "ComponentClass")?.Tag as ObjectProperty;
             if (ComponentClassProperty is null || ComponentClassProperty?.Value is null)
             {
-                throw new Exception($"Failed to find `ComponentClass` property inside {_object.GetPathName()}");
-            }
-
-            var ResolvedImport = ComponentClassProperty.Value.ResolvedObject;
-            if (ResolvedImport is null)
-            {
-                ComponentClass = "/Script/Engine.SceneComponent";
+                ComponentClass = "None";
             }
             else
             {
-                ComponentClass = ResolvedImport.GetPathName();
+                var ResolvedImport = ComponentClassProperty.Value.ResolvedObject;
+                if (ResolvedImport is null)
+                {
+                    ComponentClass = "/Script/Engine.SceneComponent";
+                }
+                else
+                {
+                    ComponentClass = ResolvedImport.GetPathName();
+                }
             }
 
             // Component Template
