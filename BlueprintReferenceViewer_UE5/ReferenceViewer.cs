@@ -1,4 +1,5 @@
-﻿using BlueprintReferenceViewer_UE5.Extensions;
+﻿using BlueprintReferenceViewer_UE5.Exceptions;
+using BlueprintReferenceViewer_UE5.Extensions;
 using BlueprintReferenceViewer_UE5.Extensions.Components;
 using CUE4Parse.Compression;
 using CUE4Parse.Encryption.Aes;
@@ -33,9 +34,18 @@ namespace BlueprintReferenceViewer_UE5
 
             _provider = InitializeProvider();
 
-            if (Settings.bScanProjectForReferencedAssets)
+            try
             {
-                GetProjectAssets();
+                if (Settings.bScanProjectForReferencedAssets)
+                {
+                    GetProjectAssets();
+                }
+            }
+            catch (ProjectNotFoundException ex)
+            {
+                Console.ForegroundColor = ConsoleColor.DarkYellow;
+                Console.WriteLine($"Warning: {ex.Message}. Continuing without project assets.");
+                Console.ForegroundColor = ConsoleColor.Gray;
             }
 
             // Clean up all existing "Level <num>" files first
@@ -58,6 +68,9 @@ namespace BlueprintReferenceViewer_UE5
                 bool PackageFound = _provider.TryLoadPackage(BlueprintPackagePath, out IPackage? Package);
                 if (!PackageFound || Package is null)
                 {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine($"Failed to load package {BlueprintPackagePath} in game files.");
+                    Console.ForegroundColor = ConsoleColor.Gray;
                     continue;
                 }
                 var PackageExports = Package.GetExports();
@@ -161,6 +174,9 @@ namespace BlueprintReferenceViewer_UE5
                 bool PackageFound = _provider.TryLoadPackage(BlueprintPackagePath, out IPackage? Package);
                 if (!PackageFound || Package is null)
                 {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine($"Failed to load package {BlueprintPackagePath} in game files.");
+                    Console.ForegroundColor = ConsoleColor.Gray;
                     continue;
                 }
                 var PackageExports = Package.GetExports();
@@ -178,7 +194,9 @@ namespace BlueprintReferenceViewer_UE5
             {
                 using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("BlueprintReferenceViewer_UE5.Resources.oo2core_9_win64.dll");
                 if (stream == null)
+                {
                     throw new Exception("Couldn't find oo2core_9_win64.dll in Embedded Resources");
+                }
                 var ba = new byte[(int)stream.Length];
                 _ = stream.Read(ba, 0, (int)stream.Length);
                 File.WriteAllBytes(TempDllPath, ba);
@@ -209,7 +227,7 @@ namespace BlueprintReferenceViewer_UE5
         {
             if (!Directory.Exists(_viewerSettings.ProjectDirectory))
             {
-                throw new Exception("Project directory doesn't exist. Uncheck bScanProjectForReferencedAssets");
+                throw new ProjectNotFoundException();
             }
             string[] ProjectAssets = Directory.GetFiles($"{_viewerSettings.ProjectDirectory}\\Content", "*.uasset", SearchOption.AllDirectories);
             foreach (string projectAssetPath in ProjectAssets)
